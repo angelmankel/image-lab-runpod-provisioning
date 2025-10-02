@@ -52,6 +52,7 @@ check_comfyui() {
 }
 
 # Function to install system dependencies if needed
+# Function to install system dependencies if needed
 install_dependencies() {
     log_info "Checking dependencies..."
     
@@ -61,11 +62,28 @@ install_dependencies() {
         apt-get update && apt-get install -y aria2
     fi
     
-    # Check if pip packages are available
-    if ! python -c "import huggingface_hub" 2>/dev/null; then
-        log_info "Installing huggingface-hub..."
-        pip install huggingface-hub
-    fi
+    # Install essential Python packages for ComfyUI
+    log_info "Installing/updating Python dependencies..."
+    pip install --upgrade pip
+    
+    # Core dependencies
+    pip install \
+        safetensors \
+        aiohttp \
+        aiohttp-cors \
+        huggingface-hub \
+        transformers \
+        accelerate \
+        scipy \
+        einops \
+        opencv-python \
+        pillow \
+        psutil \
+        pyyaml \
+        requests \
+        tqdm
+    
+    log_info "Dependencies installed successfully"
 }
 
 # Function to configure API keys
