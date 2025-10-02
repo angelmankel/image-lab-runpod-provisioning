@@ -23,17 +23,19 @@ export CIVITAI_API_KEY="${civitai_usenet}"
 # Custom nodes to install (comma-separated)
 export CUSTOM_NODES="
 https://github.com/ltdrdata/ComfyUI-Manager.git
+https://github.com/comfyanonymous/ComfyUI_experiments.git
 https://github.com/Fannovel16/comfyui_controlnet_aux.git
+https://github.com/rgthree/rgthree-comfy.git
+https://github.com/pythongosssss/ComfyUI-WD14-Tagger.git
+https://github.com/cubiq/ComfyUI_essentials.git
+https://github.com/ZHO-ZHO-ZHO/ComfyUI-BRIA_AI-RMBG.git
+https://github.com/spacepxl/ComfyUI-Image-Filters.git
 "
 
-# Models to download
-# Format: source:identifier:filename (one per line)
-# Sources: hf (HuggingFace), civitai, url
 export MODELS="
-hf:runwayml/stable-diffusion-v1-5/v1-5-pruned-emaonly.safetensors:sd15.safetensors
 hf:stabilityai/sdxl-vae/sdxl_vae.safetensors:sdxl_vae.safetensors
-civitai:123456:my_lora.safetensors
-url:https://example.com/model.safetensors:custom_model.safetensors
+civitai:1413921:Uncanny_Valley.safetensors
+civitai:652659:pony_lcm.safetensors
 "
 
 # Custom tasks to run (optional, separated by |)
