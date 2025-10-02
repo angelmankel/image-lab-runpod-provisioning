@@ -52,7 +52,6 @@ check_comfyui() {
 }
 
 # Function to install system dependencies if needed
-# Function to install system dependencies if needed
 install_dependencies() {
     log_info "Checking dependencies..."
     
@@ -81,7 +80,10 @@ install_dependencies() {
         psutil \
         pyyaml \
         requests \
-        tqdm
+        tqdm \
+        torchsde \
+        kornia \
+        spandrel
     
     log_info "Dependencies installed successfully"
 }
