@@ -55,6 +55,19 @@ check_comfyui() {
 install_dependencies() {
     log_info "Checking dependencies..."
     
+    # Make sure we're using the right Python/pip
+    if [ -d "$COMFYUI_DIR/venv" ]; then
+        log_info "Activating ComfyUI virtual environment..."
+        source "$COMFYUI_DIR/venv/bin/activate"
+    fi
+    
+    # Ensure pip is available
+    if ! command -v pip &> /dev/null; then
+        log_error "pip not found in PATH"
+        # Try to use python -m pip as fallback
+        alias pip='python -m pip'
+    fi
+    
     # Check if aria2c is installed
     if ! command -v aria2c &> /dev/null; then
         log_info "Installing aria2c for faster downloads..."
@@ -63,27 +76,52 @@ install_dependencies() {
     
     # Install essential Python packages for ComfyUI
     log_info "Installing/updating Python dependencies..."
-    pip install --upgrade pip
+    python -m pip install --upgrade pip --no-cache-dir
     
-    # Core dependencies
-    pip install \
+    # Core dependencies for ComfyUI (install in chunks to avoid timeout/memory issues)
+    log_info "Installing core dependencies..."
+    python -m pip install --no-cache-dir \
         safetensors \
         aiohttp \
         aiohttp-cors \
         huggingface-hub \
         transformers \
-        accelerate \
+        accelerate
+    
+    log_info "Installing scientific/image processing libraries..."
+    python -m pip install --no-cache-dir \
         scipy \
         einops \
         opencv-python \
         pillow \
+        scikit-image \
+        imageio \
+        imageio-ffmpeg
+    
+    log_info "Installing AI/ML libraries..."
+    python -m pip install --no-cache-dir \
+        torchsde \
+        kornia \
+        spandrel \
+        onnxruntime
+    
+    log_info "Installing utility libraries..."
+    python -m pip install --no-cache-dir \
         psutil \
         pyyaml \
         requests \
         tqdm \
-        torchsde \
-        kornia \
-        spandrel
+        av \
+        matplotlib \
+        soundfile
+    
+    log_info "Installing optional model support libraries..."
+    python -m pip install --no-cache-dir \
+        trimesh \
+        segment-anything \
+        ultralytics \
+        insightface \
+        mediapipe || log_warn "Some optional dependencies failed to install"
     
     log_info "Dependencies installed successfully"
 }
