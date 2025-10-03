@@ -111,7 +111,8 @@ install_dependencies() {
         transformers \
         accelerate \
         GitPython \
-        pymatting
+        pymatting \
+        toml
     
     log_info "Installing scientific/image processing libraries..."
     python -m pip install --no-cache-dir \
