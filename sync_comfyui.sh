@@ -50,6 +50,14 @@ install_comfyui() {
     
     if [ -d "$COMFYUI_DIR" ]; then
         log_skip "ComfyUI already exists at $COMFYUI_DIR"
+        
+        # Check if frontend package is installed
+        if ! python -c "import comfyui_frontend_package" 2>/dev/null; then
+            log_warn "ComfyUI frontend package missing, installing..."
+            cd "$COMFYUI_DIR"
+            python -m pip install -r requirements.txt --upgrade
+        fi
+        
         return 0
     fi
     
@@ -64,10 +72,16 @@ install_comfyui() {
     
     cd "$COMFYUI_DIR"
     
-    # Install ComfyUI requirements
+    # Install ComfyUI requirements (includes frontend package)
     if [ -f "requirements.txt" ]; then
-        log_info "Installing ComfyUI requirements..."
+        log_info "Installing ComfyUI requirements (including frontend)..."
         python -m pip install -r requirements.txt
+        
+        # Double-check frontend package is installed
+        if ! python -c "import comfyui_frontend_package" 2>/dev/null; then
+            log_warn "Frontend package check failed, attempting direct install..."
+            python -m pip install comfyui-frontend-package
+        fi
     fi
     
     log_info "ComfyUI installation completed"
