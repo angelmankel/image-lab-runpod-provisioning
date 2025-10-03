@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ################################################################################
-# ComfyUI Model & Node Sync Script
+# ComfyUI Installation & Sync Script
 # 
-# This script syncs models and custom nodes to an existing ComfyUI installation
-# Works with pre-installed ComfyUI containers (like ashleykza's)
+# This script installs ComfyUI and syncs models/custom nodes
+# Works with containers that have Python and PyTorch pre-installed
 # Usage: ./sync_comfyui.sh [config_file]
 ################################################################################
 
@@ -20,6 +20,8 @@ NC='\033[0m' # No Color
 # Default configuration
 COMFYUI_DIR="${COMFYUI_DIR:-/workspace/ComfyUI}"
 MODELS_DIR="${MODELS_DIR:-/workspace/ComfyUI/models}"
+COMFYUI_REPO="${COMFYUI_REPO:-https://github.com/comfyanonymous/ComfyUI.git}"
+COMFYUI_BRANCH="${COMFYUI_BRANCH:-master}"
 
 # API Keys from RunPod secrets
 HUGGINGFACE_TOKEN="${HUGGINGFACE_TOKEN:-${hf:-}}"
@@ -42,36 +44,48 @@ log_skip() {
     echo -e "${BLUE}[SKIP]${NC} $1"
 }
 
-# Function to check if ComfyUI exists
-check_comfyui() {
-    if [ ! -d "$COMFYUI_DIR" ]; then
-        log_error "ComfyUI not found at $COMFYUI_DIR"
-        exit 1
+# Function to install ComfyUI
+install_comfyui() {
+    log_info "Checking for ComfyUI installation..."
+    
+    if [ -d "$COMFYUI_DIR" ]; then
+        log_skip "ComfyUI already exists at $COMFYUI_DIR"
+        return 0
     fi
-    log_info "Found ComfyUI at $COMFYUI_DIR"
+    
+    log_info "Installing ComfyUI..."
+    log_info "Cloning from $COMFYUI_REPO (branch: $COMFYUI_BRANCH)"
+    
+    # Create parent directory if needed
+    mkdir -p "$(dirname "$COMFYUI_DIR")"
+    
+    # Clone ComfyUI
+    git clone -b "$COMFYUI_BRANCH" "$COMFYUI_REPO" "$COMFYUI_DIR"
+    
+    cd "$COMFYUI_DIR"
+    
+    # Install ComfyUI requirements
+    if [ -f "requirements.txt" ]; then
+        log_info "Installing ComfyUI requirements..."
+        python -m pip install -r requirements.txt
+    fi
+    
+    log_info "ComfyUI installation completed"
 }
 
 # Function to install system dependencies if needed
 install_dependencies() {
     log_info "Checking dependencies..."
     
-    # Make sure we're using the right Python/pip
-    if [ -d "$COMFYUI_DIR/venv" ]; then
-        log_info "Activating ComfyUI virtual environment..."
-        source "$COMFYUI_DIR/venv/bin/activate"
-    fi
-    
-    # Ensure pip is available
-    if ! command -v pip &> /dev/null; then
-        log_error "pip not found in PATH"
-        # Try to use python -m pip as fallback
-        alias pip='python -m pip'
-    fi
-    
     # Check if aria2c is installed
     if ! command -v aria2c &> /dev/null; then
         log_info "Installing aria2c for faster downloads..."
         apt-get update && apt-get install -y aria2
+    fi
+    
+    # Ensure pip is available
+    if ! command -v pip &> /dev/null; then
+        log_warn "pip not found in PATH, using python -m pip"
     fi
     
     # Install essential Python packages for ComfyUI
@@ -151,6 +165,7 @@ sync_custom_nodes() {
         return
     fi
     
+    mkdir -p "$COMFYUI_DIR/custom_nodes"
     cd "$COMFYUI_DIR/custom_nodes"
     
     # Read nodes line by line, ignoring empty lines and comments
@@ -171,6 +186,19 @@ sync_custom_nodes() {
                 log_info "Updating $node_name..."
                 cd "$node_name"
                 git pull
+                
+                # Install/update requirements after pull
+                if [ -f "requirements.txt" ]; then
+                    log_info "Installing/updating requirements for $node_name..."
+                    python -m pip install -r requirements.txt
+                fi
+                
+                # Some nodes use install.py
+                if [ -f "install.py" ]; then
+                    log_info "Running install.py for $node_name..."
+                    python install.py
+                fi
+                
                 cd ..
             fi
         else
@@ -180,7 +208,19 @@ sync_custom_nodes() {
             # Install requirements if they exist
             if [ -f "$node_name/requirements.txt" ]; then
                 log_info "Installing requirements for $node_name..."
-                pip install -r "$node_name/requirements.txt"
+                cd "$node_name"
+                python -m pip install -r requirements.txt
+                cd ..
+            else
+                log_warn "No requirements.txt found for $node_name"
+            fi
+            
+            # Some nodes use install.py
+            if [ -f "$node_name/install.py" ]; then
+                log_info "Running install.py for $node_name..."
+                cd "$node_name"
+                python install.py
+                cd ..
             fi
         fi
     done <<< "$CUSTOM_NODES"
@@ -201,6 +241,7 @@ download_huggingface_model() {
     python -c "
 from huggingface_hub import hf_hub_download
 import os
+import shutil
 
 # Parse the model path
 parts = '$model_path'.split('/', 2)
@@ -216,7 +257,6 @@ try:
         token='$HUGGINGFACE_TOKEN' if '$HUGGINGFACE_TOKEN' else None
     )
     # Move to target location if needed
-    import shutil
     if file_path != '$target_file':
         shutil.move(file_path, '$target_file')
     print(f'Downloaded to: $target_file')
@@ -346,7 +386,7 @@ start_comfyui() {
         cd "$COMFYUI_DIR"
         python main.py --listen 0.0.0.0 --port 8188
     else
-        log_info "Sync complete! Start ComfyUI manually when ready."
+        log_info "Setup complete! Start ComfyUI manually when ready."
     fi
 }
 
@@ -361,20 +401,20 @@ load_config() {
 # Main execution
 main() {
     echo "=================================="
-    log_info "ComfyUI Model & Node Sync Script"
+    log_info "ComfyUI Installation & Sync Script"
     echo "=================================="
     
     # Load configuration file if provided
     load_config "$@"
     
-    check_comfyui
+    install_comfyui
     install_dependencies
     configure_api_keys
     sync_custom_nodes
     sync_models
     run_custom_tasks
     
-    log_info "Sync completed successfully!"
+    log_info "Setup completed successfully!"
     echo "=================================="
     
     # Start ComfyUI if configured to do so

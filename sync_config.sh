@@ -1,11 +1,13 @@
 #!/bin/bash
 
 ################################################################################
-# ComfyUI Sync Configuration
+# ComfyUI Installation & Sync Configuration
 ################################################################################
 
-# ComfyUI Installation Directory
+# ComfyUI Installation
 export COMFYUI_DIR="/workspace/ComfyUI"
+export COMFYUI_REPO="https://github.com/comfyanonymous/ComfyUI.git"
+export COMFYUI_BRANCH="master"
 
 # Models Directory (flat structure)
 export MODELS_DIR="/workspace/ComfyUI/models"
@@ -20,7 +22,7 @@ export START_COMFYUI="true"
 export HUGGINGFACE_TOKEN="${hf}"
 export CIVITAI_API_KEY="${civitai_usenet}"
 
-# Custom nodes to install (comma-separated)
+# Custom nodes to install (one per line)
 export CUSTOM_NODES="
 https://github.com/ltdrdata/ComfyUI-Manager.git
 https://github.com/comfyanonymous/ComfyUI_experiments.git
@@ -32,6 +34,9 @@ https://github.com/ZHO-ZHO-ZHO/ComfyUI-BRIA_AI-RMBG.git
 https://github.com/spacepxl/ComfyUI-Image-Filters.git
 "
 
+# Models to download
+# Format: source:identifier:filename (one per line)
+# Sources: hf (HuggingFace), civitai, url
 export MODELS="
 hf:stabilityai/sdxl-vae/sdxl_vae.safetensors:sdxl_vae.safetensors
 civitai:1413921:Uncanny_Valley.safetensors
