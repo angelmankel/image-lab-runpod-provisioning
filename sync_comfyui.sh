@@ -97,11 +97,6 @@ install_dependencies() {
         apt-get update && apt-get install -y aria2
     fi
     
-    # Ensure pip is available
-    if ! command -v pip &> /dev/null; then
-        log_warn "pip not found in PATH, using python -m pip"
-    fi
-    
     # Install essential Python packages for ComfyUI
     log_info "Installing/updating Python dependencies..."
     python -m pip install --upgrade pip --no-cache-dir
@@ -114,7 +109,9 @@ install_dependencies() {
         aiohttp-cors \
         huggingface-hub \
         transformers \
-        accelerate
+        accelerate \
+        GitPython \
+        pymatting
     
     log_info "Installing scientific/image processing libraries..."
     python -m pip install --no-cache-dir \
