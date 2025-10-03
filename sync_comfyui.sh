@@ -112,7 +112,8 @@ install_dependencies() {
         accelerate \
         GitPython \
         pymatting \
-        toml
+        toml \
+        rich
     
     log_info "Installing scientific/image processing libraries..."
     python -m pip install --no-cache-dir \
